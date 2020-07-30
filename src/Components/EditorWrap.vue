@@ -1,8 +1,6 @@
 <template>
-  <div>
-    <textarea id="eltiptapContent" ref="eltiptapContent" style="display:none;">
-      <h2 style="text-align: center">Welcome To Element Tiptap Editor Demo</h2><p>🔥 <strong>Element Tiptap Editor </strong>🔥is a WYSIWYG rich-text editor using  <a href="https://github.com/scrumpy/tiptap" rel="noopener noreferrer nofollow">tiptap</a> and <a href="https://github.com/ElemeFE/element" rel="noopener noreferrer nofollow">element-ui</a> for Vue.js <img src="https://i.ibb.co/nbRN3S2/undraw-upload-87y9.png" alt="" title="" height="200" data-display="right"> that\'s easy to use, friendly to developers, fully extensible and clean in design.</p><p></p><p style="text-align: right">👉Click on the image to get started image features 👉</p><p></p><p>You can switch to <strong>Code View </strong>💻 mode and toggle <strong>Fullscreen</strong> 📺 in this demo.</p><p></p><p><strong>Got questions or need help or feature request?</strong></p><p>🚀 <strong>welcome to submit an <a href="https://github.com/Leecason/element-tiptap/issues" rel="noopener noreferrer nofollow">issue</a></strong> 😊</p><p>I\'m continuously working to add in new features.</p><p></p><blockquote><p>This demo is simple, switch tab for more features.</p><p>All demos source code: <a href="https://github.com/Leecason/element-tiptap/blob/master/examples/views/Index.vue" rel="noopener noreferrer nofollow">source code 🔗</a></p></blockquote>
-    </textarea>
+  <div v-loading="loading">
+    <textarea id="eltiptapContent" ref="eltiptapContent" style="display:none;"></textarea>
     <el-tiptap
       :extensions="extensions"
       :content="content"
@@ -47,12 +45,14 @@ import {
   TextColor,
   TextHighlight,
   TrailingNode,
-  // Preview,
+  Preview,
   // Print,
   // Fullscreen,
   // CodeView,
   // SelectAll,
 } from "element-tiptap";
+
+import Axios from "axios";
 
 // import codemirror from "codemirror";
 // import "codemirror/lib/codemirror.css"; // import base style
@@ -60,9 +60,10 @@ import {
 // import "codemirror/addon/selection/active-line.js"; // require active-line.js
 // import "codemirror/addon/edit/closetag.js"; // autoCloseTags
 
+const eltiptapContent = document.getElementById("eltiptapContent").innerText;
+
 export default {
   name: "EditorWrap",
-  //props: ["content"],
   data: () => ({
     extensions: [
       new Doc(),
@@ -77,6 +78,7 @@ export default {
       new Link({ bubble: true, menubar: false }),
       new FormatClear({ bubble: true, menubar: false }),
       new Heading({ level: 5 }),
+      new LineHeight(),
       new TextAlign(),
       new ListItem(),
       new BulletList(),
@@ -94,9 +96,30 @@ export default {
       new TableHeader(),
       new TableRow(),
       new TableCell(),
-      new Image(),
+      new CodeBlock(),
+      new Image({
+        //urlPattern: ``,
+        uploadRequest: function (file) {
+          const formData = new FormData();
+          formData.append("image", file);
+          return new Promise((resolve, reject) => {
+            Axios.post(`/editor/uploadImage`, formData, {
+              headers: {
+                "Content-Type": "multipart/form-data",
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRF-TOKEN": document.head.querySelector(
+                  'meta[name="csrf-token"]'
+                ).content,
+              },
+            }).then((res) => {
+              resolve(res.data.url);
+            });
+          });
+        },
+      }),
       new Iframe(),
       new History(),
+      new Preview(),
       // new Fullscreen(),
       //   new CodeView({
       //     codemirror,
@@ -107,15 +130,16 @@ export default {
       //   }),
     ],
     content: ``,
+    loading: true,
   }),
   mounted() {
-    this.content = this.$refs.eltiptapContent.innerText;
-    console.log(this.$refs.eltiptapContent);
+    this.content = eltiptapContent;
+    this.loading = false;
   },
   methods: {
     onUpdateEvent(output, options) {
       const { getJSON, getHTML } = options;
-      this.$refs.eltiptapContent.innerText = getHTML();
+      document.getElementById("eltiptapContent").innerText = getHTML();
     },
   },
 };

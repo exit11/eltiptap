@@ -9,6 +9,8 @@ import "element-tiptap/lib/index.css";
 
 import EditorWrap from "./Components/EditorWrap";
 
+Vue.config.productionTip = false;
+
 // use ElementUI's plugin
 Vue.use(ElementUI);
 // use this package's plugin
@@ -18,14 +20,8 @@ Vue.use(ElementTiptapPlugin, {
 });
 // Now you register `'el-tiptap'` component globally.
 
-/* laravel 데이터 전달 변수 설정 */
-// let editorProps = {
-//   content: window.ELTIPTAP.content,
-// };
-
 export const Editor = new Vue({
   components: {
     "editor-wrap": EditorWrap,
   },
-  //   data: () => editorProps,
 }).$mount("#eltiptap");
